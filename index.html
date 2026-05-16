@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Lucas Stalter — Quantitative Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#F4F7FC;--bg2:#EBF0FA;--bg3:#E2EAF7;
+  --navy:#0A1628;--navy2:#152240;
+  --blue:#1A4A8A;--blue2:#2B6CB0;--blue3:#4A90D9;
+  --accent:#0066FF;--pale:#C8D8F0;
+  --muted:#6B7A9A;--border:rgba(10,22,40,0.08);--border2:rgba(10,22,40,0.16);
+  --serif:'Cormorant',Georgia,serif;--sans:'Outfit',sans-serif;--mono:'DM Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;cursor:none}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--navy);font-family:var(--sans);font-weight:300;overflow-x:hidden}
+
+/* CURSOR */
+#cur{position:fixed;width:7px;height:7px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transition:transform .12s,background .2s}
+#cur-ring{position:fixed;width:34px;height:34px;border:1.5px solid rgba(0,102,255,0.35);border-radius:50%;pointer-events:none;z-index:9998}
+
+/* CANVAS */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* ── NAV FLOTTANTE ARRONDIE ── */
+#navbar-wrap{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:200;width:calc(100% - 48px);max-width:900px;transition:all .4s}
+nav{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.75rem 1.6rem;
+  background:rgba(244,247,252,0.88);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(10,22,40,0.1);
+  border-radius:999px;
+  box-shadow:0 4px 24px rgba(10,22,40,0.08);
+  transition:all .4s;
+}
+nav.solid{background:rgba(244,247,252,0.97);box-shadow:0 6px 32px rgba(10,22,40,0.12)}
+.nav-logo{font-family:var(--mono);font-size:.82rem;letter-spacing:.06em;color:var(--navy);text-decoration:none;white-space:nowrap}
+.nav-logo em{color:var(--accent);font-style:normal}
+.nav-links{display:flex;gap:.2rem;list-style:none;align-items:center}
+.nav-links a{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:.4rem .8rem;border-radius:999px;transition:all .2s;white-space:nowrap}
+.nav-links a:hover{color:var(--navy);background:rgba(10,22,40,0.05)}
+.nav-right{display:flex;gap:.5rem;align-items:center}
+.nav-cv{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:var(--blue2);text-decoration:none;padding:.4rem .9rem;border:1px solid var(--border2);border-radius:999px;transition:all .2s;white-space:nowrap}
+.nav-cv:hover{border-color:var(--accent);color:var(--accent)}
+.lang-btn{display:flex;align-items:center;gap:.35rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;background:var(--navy);color:#fff;border:none;padding:.4rem .9rem;border-radius:999px;transition:all .2s;white-space:nowrap}
+.lang-btn:hover{background:var(--accent)}
+.lang-flag{font-size:.9rem;line-height:1}
+.lang-text{font-size:.65rem;letter-spacing:.1em}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 5rem;position:relative;z-index:1}
+.hero-eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:2rem;display:flex;align-items:center;gap:1rem;opacity:0;animation:fadeUp .8s .2s forwards}
+.hero-eyebrow::before{content:'';display:inline-block;width:2.5rem;height:1.5px;background:var(--accent)}
+.hero-title{font-family:var(--serif);font-size:clamp(4.5rem,8.5vw,9rem);font-weight:300;line-height:.92;letter-spacing:-.02em;margin-bottom:2.5rem;opacity:0;animation:fadeUp 1s .4s forwards}
+.hero-title .it{font-style:italic;color:var(--blue2)}
+.hero-title .sm{font-size:.38em;display:block;color:var(--muted);font-weight:300;font-style:normal;letter-spacing:.02em;margin-top:.5rem;font-family:var(--mono)}
+.hero-bottom{display:flex;align-items:flex-start;justify-content:space-between;gap:4rem}
+.hero-desc{font-size:.88rem;color:var(--muted);line-height:1.95;max-width:420px;opacity:0;animation:fadeUp .9s .7s forwards}
+.hero-desc strong{color:var(--navy);font-weight:500}
+.hero-ctas{display:flex;gap:1rem;margin-top:2rem}
+.cta-main{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;background:var(--navy);color:var(--bg);padding:.85rem 2rem;text-decoration:none;border-radius:999px;transition:all .25s}
+.cta-main:hover{background:var(--accent)}
+.cta-ghost{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;color:var(--blue2);text-decoration:none;border:1.5px solid var(--border2);padding:.85rem 2rem;border-radius:999px;transition:all .25s}
+.cta-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.hero-metrics{display:flex;flex-direction:column;min-width:220px;opacity:0;animation:fadeUp .9s .9s forwards}
+.metric{display:flex;align-items:baseline;gap:.8rem;padding:.9rem 0;border-top:1px solid var(--border)}
+.metric:last-child{border-bottom:1px solid var(--border)}
+.metric-num{font-family:var(--serif);font-size:2.2rem;font-style:italic;color:var(--navy);line-height:1}
+.metric-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.scroll-hint{position:absolute;bottom:2.5rem;left:5rem;display:flex;align-items:center;gap:.8rem;opacity:0;animation:fadeIn 1s 1.5s forwards}
+.scroll-hint span{font-family:var(--mono);font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.scroll-hint::after{content:'';display:block;width:2rem;height:1.5px;background:var(--accent);animation:scrollw 2s ease-in-out infinite}
+@keyframes scrollw{0%,100%{width:2rem}50%{width:.6rem}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:.5}}
+
+/* TICKER */
+.ticker-wrap{position:relative;z-index:1;overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:.75rem 0;background:var(--bg2)}
+.ticker{display:flex;white-space:nowrap;animation:ticker 50s linear infinite}
+.t-item{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--muted);padding:0 2.5rem;border-right:1px solid var(--border)}
+.t-item .dot{color:var(--accent);margin-right:.4rem}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* SECTIONS */
+section{position:relative;z-index:1;padding:7rem 5rem}
+.s-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem;display:flex;align-items:center;gap:.8rem}
+.s-label::before{content:'';display:inline-block;width:2rem;height:1.5px;background:var(--accent)}
+.s-title{font-family:var(--serif);font-size:clamp(2.8rem,5vw,5rem);font-weight:300;line-height:.95;margin-bottom:3rem}
+.s-title em{font-style:italic;color:var(--blue2)}
+
+/* ABOUT */
+#about{background:var(--bg)}
+.about-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:7rem;align-items:start}
+.about-text{font-size:.9rem;line-height:1.95;color:var(--muted)}
+.about-text p+p{margin-top:1.1rem}
+.about-text strong{color:var(--navy);font-weight:500}
+.about-focus{margin-top:2rem;padding:1.5rem 2rem;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent)}
+.focus-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem}
+.focus-text{font-family:var(--serif);font-size:1.25rem;font-weight:300;font-style:italic;color:var(--navy);line-height:1.5}
+.timeline{margin-top:2.5rem}
+.tl-item{display:grid;grid-template-columns:8rem 1fr;gap:1.5rem;padding:1.3rem 0;border-top:1px solid var(--border);position:relative}
+.tl-item::before{content:'';position:absolute;left:8rem;top:50%;width:7px;height:7px;border-radius:50%;background:var(--bg);border:2px solid var(--accent);transform:translate(-50%,-50%)}
+.tl-date{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:var(--accent);padding-top:.3rem}
+.tl-role{font-size:.88rem;font-weight:500;color:var(--navy);margin-bottom:.2rem}
+.tl-co{font-family:var(--mono);font-size:.66rem;color:var(--muted)}
+.skills-col{display:flex;flex-direction:column;gap:1.3rem}
+.sk-row{display:flex;flex-direction:column;gap:.4rem}
+.sk-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.sk-label span{color:var(--blue2)}
+.sk-track{height:2px;background:var(--border2);overflow:hidden}
+.sk-fill{height:100%;background:linear-gradient(to right,var(--blue2),var(--accent));width:0%;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+
+/* PROJECTS */
+#projects{background:var(--bg2)}
+.proj-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:1.5rem}
+.proj-card{background:var(--bg);border:1px solid var(--border);padding:2.2rem;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s}
+.proj-card:hover{border-color:rgba(0,102,255,0.25);box-shadow:0 8px 40px rgba(0,102,255,0.06)}
+.proj-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue2),var(--accent));transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.proj-card:hover::before{transform:scaleX(1)}
+.proj-main{grid-column:span 7}
+.proj-side{grid-column:span 5;display:flex;flex-direction:column;gap:1.5rem}
+.proj-sm{background:var(--bg);border:1px solid var(--border);padding:1.8rem;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s;flex:1}
+.proj-sm:hover{border-color:rgba(0,102,255,0.25);box-shadow:0 8px 40px rgba(0,102,255,0.06)}
+.proj-sm::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue2),var(--accent));transform:scaleX(0);transform-origin:left;transition:transform .5s}
+.proj-sm:hover::before{transform:scaleX(1)}
+.proj-row{grid-column:span 12;display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.proj-mid{background:var(--bg);border:1px solid var(--border);padding:1.8rem;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s}
+.proj-mid:hover{border-color:rgba(0,102,255,0.25);box-shadow:0 8px 40px rgba(0,102,255,0.06)}
+.proj-mid::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue2),var(--accent));transform:scaleX(0);transform-origin:left;transition:transform .5s}
+.proj-mid:hover::before{transform:scaleX(1)}
+.proj-num{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;color:var(--accent);margin-bottom:1.2rem}
+.proj-name{font-family:var(--serif);font-size:1.7rem;font-weight:300;line-height:1.15;margin-bottom:.8rem;color:var(--navy)}
+.proj-name-sm{font-family:var(--serif);font-size:1.2rem;font-weight:300;line-height:1.15;margin-bottom:.6rem;color:var(--navy)}
+.proj-desc{font-size:.82rem;color:var(--muted);line-height:1.8;margin-bottom:1.5rem}
+.proj-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.5rem}
+.tag{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;padding:.22rem .65rem;border:1px solid var(--border2);color:var(--muted);text-transform:uppercase}
+.proj-links{display:flex;gap:1.2rem}
+.proj-link{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue2);text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;transition:color .2s;border-bottom:1px solid transparent}
+.proj-link:hover{color:var(--accent);border-color:var(--accent)}
+.proj-link::after{content:'↗'}
+.live-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(0,102,255,0.2);background:rgba(0,102,255,0.04);padding:.2rem .7rem;margin-bottom:1rem}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 1.5s ease-in-out infinite}
+.proj-visual{height:85px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border);margin-bottom:1.5rem;overflow:hidden}
+.proj-visual-text{font-family:var(--serif);font-size:3rem;font-style:italic;color:rgba(0,102,255,0.1)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
+/* STACK */
+#stack{background:var(--navy);color:var(--bg)}
+#stack .s-label{color:var(--pale)}
+#stack .s-label::before{background:var(--pale)}
+#stack .s-title{color:var(--bg)}
+#stack .s-title em{color:var(--blue3)}
+.stack-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.06);margin-top:3rem}
+.stack-card{background:var(--navy);padding:2rem 1.8rem;transition:background .25s;position:relative;overflow:hidden}
+.stack-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,var(--blue2),var(--blue3));transform:scaleX(0);transition:transform .4s}
+.stack-card:hover{background:var(--navy2)}
+.stack-card:hover::after{transform:scaleX(1)}
+.stack-icon{font-family:var(--serif);font-size:2rem;font-style:italic;color:var(--blue3);margin-bottom:.9rem;opacity:.7}
+.stack-name{font-size:.85rem;font-weight:500;color:var(--bg);margin-bottom:.4rem}
+.stack-detail{font-family:var(--mono);font-size:.62rem;color:rgba(244,247,252,.4);line-height:1.6}
+
+/* CONTACT */
+#contact{background:var(--bg);min-height:65vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+#contact .s-label{justify-content:center}
+#contact .s-label::before{display:none}
+.contact-title{font-family:var(--serif);font-size:clamp(3rem,8vw,7rem);font-weight:300;line-height:.92;letter-spacing:-.02em;margin:1rem 0 1.5rem}
+.contact-title em{font-style:italic;color:var(--blue2)}
+.contact-sub{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-bottom:1.8rem;letter-spacing:.05em;max-width:380px;line-height:1.8}
+.contact-email{font-family:var(--mono);font-size:clamp(.8rem,1.6vw,.95rem);letter-spacing:.06em;color:var(--blue2);text-decoration:none;border-bottom:1.5px solid var(--border2);padding-bottom:.2rem;margin-bottom:2.5rem;display:inline-block;transition:color .2s,border-color .2s}
+.contact-email:hover{color:var(--accent);border-color:var(--accent)}
+.contact-btns{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center}
+.c-btn{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.85rem 2rem;text-decoration:none;border:1.5px solid var(--border2);color:var(--muted);border-radius:999px;transition:all .2s}
+.c-btn:hover{background:var(--navy);border-color:var(--navy);color:var(--bg)}
+.c-btn.primary{background:var(--navy);border-color:var(--navy);color:var(--bg)}
+.c-btn.primary:hover{background:var(--accent);border-color:var(--accent)}
+
+footer{position:relative;z-index:1;background:var(--navy);padding:1.8rem 5rem;display:flex;justify-content:space-between;align-items:center}
+.f-copy{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:rgba(244,247,252,.3)}
+.f-links{display:flex;gap:2rem}
+.f-links a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,247,252,.3);text-decoration:none;transition:color .2s}
+.f-links a:hover{color:var(--blue3)}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .85s cubic-bezier(.4,0,.2,1),transform .85s cubic-bezier(.4,0,.2,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
+
+/* LANG hidden */
+[data-lang]{transition:opacity .25s}
+
+@media(max-width:900px){
+  #navbar-wrap{width:calc(100% - 24px);top:10px}
+  nav{padding:.6rem 1rem}
+  .nav-links{display:none}
+  #hero{padding:6rem 1.5rem 4rem}
+  .hero-bottom{flex-direction:column;gap:2rem}
+  section{padding:4rem 1.5rem}
+  .about-grid{grid-template-columns:1fr}
+  .proj-grid{grid-template-columns:1fr}
+  .proj-main,.proj-side,.proj-row{grid-column:span 1}
+  .proj-side,.proj-row{display:flex;flex-direction:column}
+  .stack-grid{grid-template-columns:repeat(2,1fr)}
+  footer{flex-direction:column;gap:1rem;padding:1.5rem}
+}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<canvas id="bg-canvas"></canvas>
+
+<!-- NAV FLOTTANTE ARRONDIE -->
+<div id="navbar-wrap">
+  <nav id="navbar">
+    <a href="#" class="nav-logo"><em>//</em> Lucas Stalter</a>
+    <ul class="nav-links">
+      <li><a href="#about"><span data-lang="en">About</span><span data-lang="fr" style="display:none">À propos</span></a></li>
+      <li><a href="#projects"><span data-lang="en">Projects</span><span data-lang="fr" style="display:none">Projets</span></a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="assets/cv/CV_STALTER_Lucas.pdf" target="_blank" class="nav-cv">CV ↗</a>
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()">
+        <span class="lang-flag" id="langFlag">🇬🇧</span>
+        <span class="lang-text" id="langText">EN</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow" id="hero-eyebrow">Quantitative Finance · Risk · Asset Management · ESILV Paris</div>
+  <h1 class="hero-title">
+    Math<span class="it">ematics</span><br>
+    <span class="it">Meets</span> Markets.<br>
+    <span class="sm" id="hero-sm">Financial Engineering · ESILV Paris La Défense</span>
+  </h1>
+  <div class="hero-bottom">
+    <div>
+      <p class="hero-desc" id="hero-desc">
+        M1 Financial Engineering @ <strong>ESILV Paris La Défense</strong>.<br>
+        Currently <strong>Developer & Financial Analyst @ Banque de France</strong> — bond valuation models & ETL pipelines.<br><br>
+        Passionate about the <strong>mathematical side of finance</strong> — stochastic calculus, derivatives pricing, risk modeling, and quantitative asset management.<br><br>
+        Seeking a <strong>6-month internship</strong> from October 2026.
+      </p>
+      <div class="hero-ctas">
+        <a href="#projects" class="cta-main" id="cta-projects">View Projects →</a>
+        <a href="assets/cv/CV_STALTER_Lucas.pdf" target="_blank" class="cta-ghost">Download CV ↗</a>
+      </div>
+    </div>
+    <div class="hero-metrics">
+      <div class="metric"><span class="metric-num">6+</span><span class="metric-label" id="m1-label">Projects</span></div>
+      <div class="metric"><span class="metric-num">∂</span><span class="metric-label" id="m2-label">Greeks & Derivatives</span></div>
+      <div class="metric"><span class="metric-num">BdF</span><span class="metric-label" id="m3-label">Current Internship</span></div>
+      <div class="metric"><span class="metric-num">σ</span><span class="metric-label" id="m4-label">Stochastic Calculus</span></div>
+    </div>
+  </div>
+  <div class="scroll-hint"><span id="scroll-text">Scroll</span></div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker">
+    <span class="t-item"><span class="dot">∂</span>Black-Scholes PDE</span>
+    <span class="t-item"><span class="dot">σ</span>Stochastic Volatility</span>
+    <span class="t-item"><span class="dot">∫</span>Itô Calculus</span>
+    <span class="t-item"><span class="dot">∆</span>Greeks Computation</span>
+    <span class="t-item"><span class="dot">Σ</span>Portfolio Optimization</span>
+    <span class="t-item"><span class="dot">λ</span>Risk-Neutral Measure</span>
+    <span class="t-item"><span class="dot">β</span>Factor Models</span>
+    <span class="t-item"><span class="dot">ρ</span>Correlation Matrices</span>
+    <span class="t-item"><span class="dot">μ</span>Expected Return</span>
+    <span class="t-item"><span class="dot">V</span>Value at Risk · CVaR</span>
+    <span class="t-item"><span class="dot">α</span>Alpha Generation</span>
+    <span class="t-item"><span class="dot">π</span>Arbitrage Pricing Theory</span>
+    <span class="t-item"><span class="dot">∂</span>Black-Scholes PDE</span>
+    <span class="t-item"><span class="dot">σ</span>Stochastic Volatility</span>
+    <span class="t-item"><span class="dot">∫</span>Itô Calculus</span>
+    <span class="t-item"><span class="dot">∆</span>Greeks Computation</span>
+    <span class="t-item"><span class="dot">Σ</span>Portfolio Optimization</span>
+    <span class="t-item"><span class="dot">λ</span>Risk-Neutral Measure</span>
+    <span class="t-item"><span class="dot">β</span>Factor Models</span>
+    <span class="t-item"><span class="dot">ρ</span>Correlation Matrices</span>
+    <span class="t-item"><span class="dot">μ</span>Expected Return</span>
+    <span class="t-item"><span class="dot">V</span>Value at Risk · CVaR</span>
+    <span class="t-item"><span class="dot">α</span>Alpha Generation</span>
+    <span class="t-item"><span class="dot">π</span>Arbitrage Pricing Theory</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="s-label reveal" id="about-label">01 — Profile</div>
+  <h2 class="s-title reveal d1" id="about-title">The Math<br>Behind <em>Finance.</em></h2>
+  <div class="about-grid">
+    <div>
+      <div class="about-text reveal d2" id="about-text">
+        <p>I'm a financial engineering student with a deep interest in the <strong>mathematical and quantitative side of finance</strong>. My goal is to work in roles where rigorous modeling drives decisions — risk management, quantitative asset management, or derivatives structuring.</p>
+        <p>Currently interning at <strong>Banque de France</strong> as a Developer & Financial Analyst, building bond valuation models (zero-coupon, inflation-indexed T-Bills) and automating ETL pipelines for front-office reconciliation in a regulated central banking environment.</p>
+        <p>My academic background blends CPGE-level mathematics (analysis, probability, stochastics) with hands-on implementations: C++ option pricers, ML-driven signal generation, and cloud-deployed quant platforms.</p>
+      </div>
+      <div class="about-focus reveal d3">
+        <div class="focus-label" id="focus-label">Target domains</div>
+        <div class="focus-text">"Quantitative Risk · Derivatives Pricing · Asset Management · Fixed Income"</div>
+      </div>
+      <div class="timeline reveal d3">
+        <div class="tl-item"><div class="tl-date">Apr–Oct 2026</div><div><div class="tl-role">Developer & Financial Analyst</div><div class="tl-co">Banque de France — Paris</div></div></div>
+        <div class="tl-item"><div class="tl-date">2024–2027</div><div><div class="tl-role" id="tl-master">Master in Financial Engineering</div><div class="tl-co">ESILV — Paris La Défense</div></div></div>
+        <div class="tl-item"><div class="tl-date">2022–2024</div><div><div class="tl-role">CPGE PCSI/PSI</div><div class="tl-co">Lycée Kléber — Strasbourg</div></div></div>
+        <div class="tl-item"><div class="tl-date">Jul 2023</div><div><div class="tl-role" id="tl-eng">Advanced English — CEFR C1</div><div class="tl-co">Nacel English School — London</div></div></div>
+      </div>
+    </div>
+    <div class="skills-col reveal d2">
+      <div class="sk-row"><div class="sk-label" id="sk1">Derivatives Pricing — BS, CRR, Greeks<span>90%</span></div><div class="sk-track"><div class="sk-fill" data-w="90"></div></div></div>
+      <div class="sk-row"><div class="sk-label">Python — Pandas, NumPy, Scikit-learn<span>88%</span></div><div class="sk-track"><div class="sk-fill" data-w="88"></div></div></div>
+      <div class="sk-row"><div class="sk-label" id="sk3">Stochastic Calculus & Probability<span>85%</span></div><div class="sk-track"><div class="sk-fill" data-w="85"></div></div></div>
+      <div class="sk-row"><div class="sk-label">VBA / Excel — Financial Models<span>83%</span></div><div class="sk-track"><div class="sk-fill" data-w="83"></div></div></div>
+      <div class="sk-row"><div class="sk-label">C++ — OOP, High-Performance Pricing<span>80%</span></div><div class="sk-track"><div class="sk-fill" data-w="80"></div></div></div>
+      <div class="sk-row"><div class="sk-label" id="sk6">Machine Learning — Signal Generation<span>76%</span></div><div class="sk-track"><div class="sk-fill" data-w="76"></div></div></div>
+      <div class="sk-row"><div class="sk-label">R — Econometrics, Panel Data<span>72%</span></div><div class="sk-track"><div class="sk-fill" data-w="72"></div></div></div>
+      <div class="sk-row"><div class="sk-label">Bloomberg Terminal<span>70%</span></div><div class="sk-track"><div class="sk-fill" data-w="70"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="s-label reveal" id="proj-label">02 — Work</div>
+  <h2 class="s-title reveal d1" id="proj-title">Selected <em>Projects.</em></h2>
+  <div class="proj-grid">
+    <div class="proj-card proj-main reveal d1">
+      <div class="live-badge"><span class="live-dot"></span><span id="live-text">Live on GCP</span></div>
+      <div class="proj-visual"><span class="proj-visual-text">∑ Σ Portfolio</span></div>
+      <div class="proj-num">01 — Featured</div>
+      <div class="proj-name" id="p1-name">Quantitative Portfolio Dashboard</div>
+      <div class="proj-desc" id="p1-desc">Production-ready quant research platform. Backtesting engine (Moving Average, Momentum) vs Buy & Hold. Multi-asset optimizer with VaR, Sharpe Ratio, Max Drawdown. Deployed 24/7 on GCP with automated Cron daily reporting.</div>
+      <div class="proj-tags"><span class="tag">Python</span><span class="tag">Streamlit</span><span class="tag">GCP</span><span class="tag">VaR</span><span class="tag">Backtesting</span><span class="tag">Linux</span></div>
+      <div class="proj-links"><a href="https://quant-portfolio.streamlit.app/" target="_blank" class="proj-link" id="p1-live">Live Dashboard</a><a href="https://github.com/LucasSt04/Project-Python-Git-Linux-for-Finance" target="_blank" class="proj-link">GitHub</a></div>
+    </div>
+    <div class="proj-side">
+      <div class="proj-sm reveal d2">
+        <div class="proj-num">02</div>
+        <div class="proj-name-sm" id="p2-name">C++ Option Pricer</div>
+        <div class="proj-desc" id="p2-desc">High-performance C++ pricer: Black-Scholes + CRR Binomial Tree. 10,000+ options/sec. Full Greeks: Delta, Gamma, Vega, Theta, Rho.</div>
+        <div class="proj-tags"><span class="tag">C++</span><span class="tag">Black-Scholes</span><span class="tag">CRR</span><span class="tag">Greeks</span></div>
+        <div class="proj-links"><a href="https://github.com/LucasSt04/Cpp_Option_Pricer" target="_blank" class="proj-link">GitHub</a></div>
+      </div>
+      <div class="proj-sm reveal d3">
+        <div class="proj-num">03</div>
+        <div class="proj-name-sm" id="p3-name">QRT ENS Data Challenge</div>
+        <div class="proj-desc" id="p3-desc">ML pipeline predicting stock return directions on 400,000+ observations. Full preprocessing, logistic regression, cross-validation.</div>
+        <div class="proj-tags"><span class="tag">Python</span><span class="tag">Scikit-learn</span><span class="tag">ML</span></div>
+        <div class="proj-links"><a href="https://github.com/LucasSt04/QRT_Challenge_ENS" target="_blank" class="proj-link">GitHub</a></div>
+      </div>
+    </div>
+    <div class="proj-row">
+      <div class="proj-mid reveal d1">
+        <div class="proj-num">04</div>
+        <div class="proj-name-sm" id="p4-name">VBA Option Pricer</div>
+        <div class="proj-desc" id="p4-desc">Excel/VBA CRR Binomial Tree. European & American options, structured products, Greeks, Black-Scholes convergence analysis.</div>
+        <div class="proj-tags"><span class="tag">VBA</span><span class="tag">Excel</span><span class="tag">Greeks</span><span class="tag">Binomial</span></div>
+        <div class="proj-links"><a href="https://github.com/LucasSt04/VBA-Option-Pricer-Binomial-Tree" target="_blank" class="proj-link">GitHub</a></div>
+      </div>
+      <div class="proj-mid reveal d2">
+        <div class="proj-num">05</div>
+        <div class="proj-name-sm" id="p5-name">Commodity Trading & Risk</div>
+        <div class="proj-desc" id="p5-desc">Dynamic strategies on WTI/Brent — momentum signals, hedging logic, VaR. Performance evaluated by historical backtest.</div>
+        <div class="proj-tags"><span class="tag">Python</span><span class="tag">VaR</span><span class="tag">Backtesting</span></div>
+        <div class="proj-links"><a href="https://github.com/LucasSt04/Commodity-Trading-Risk-Analysis" target="_blank" class="proj-link">GitHub</a></div>
+      </div>
+      <div class="proj-mid reveal d3">
+        <div class="proj-num">06</div>
+        <div class="proj-name-sm" id="p6-name">Lithium Market Analysis</div>
+        <div class="proj-desc" id="p6-desc">Quantitative study of the lithium commodity market. Pricing models and trading strategy simulation using real market data.</div>
+        <div class="proj-tags"><span class="tag">Python</span><span class="tag">Jupyter</span><span class="tag">Commodities</span></div>
+        <div class="proj-links"><a href="https://github.com/LucasSt04/Commodity-Markets-And-Models" target="_blank" class="proj-link">GitHub</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack">
+  <div class="s-label reveal" id="stack-label">03 — Expertise</div>
+  <h2 class="s-title reveal d1" id="stack-title">Tech & <em>Quant Stack.</em></h2>
+  <div class="stack-grid">
+    <div class="stack-card reveal"><div class="stack-icon">∂</div><div class="stack-name" id="st1-name">Quant Finance</div><div class="stack-detail">Black-Scholes · CRR Binomial · Greeks · Stochastic Calculus · Risk-Neutral Pricing</div></div>
+    <div class="stack-card reveal d1"><div class="stack-icon">σ</div><div class="stack-name" id="st2-name">Risk Modeling</div><div class="stack-detail">Value at Risk · CVaR · Volatility · Max Drawdown · Backtesting · Bond Valuation</div></div>
+    <div class="stack-card reveal d2"><div class="stack-icon">⟨/⟩</div><div class="stack-name">Python</div><div class="stack-detail">Pandas · NumPy · Scikit-learn · openpyxl · Streamlit · yfinance</div></div>
+    <div class="stack-card reveal d3"><div class="stack-icon">△</div><div class="stack-name">C++</div><div class="stack-detail">OOP · STL · High-performance engines · 10K+ options/sec</div></div>
+    <div class="stack-card reveal"><div class="stack-icon">◻</div><div class="stack-name">VBA / Excel</div><div class="stack-detail">Macro automation · Financial models · Interactive dashboards</div></div>
+    <div class="stack-card reveal d1"><div class="stack-icon">∫</div><div class="stack-name" id="st6-name">Math & Stats</div><div class="stack-detail">Stochastic Processes · Econometrics · Time Series · Panel Data (R)</div></div>
+    <div class="stack-card reveal d2"><div class="stack-icon">☁</div><div class="stack-name" id="st7-name">Cloud & DevOps</div><div class="stack-detail">GCP · Linux (Debian) · Git · Cron Automation · Streamlit Cloud</div></div>
+    <div class="stack-card reveal d3"><div class="stack-icon">◈</div><div class="stack-name">Bloomberg</div><div class="stack-detail">Terminal · Fixed Income · Market Data · Derivatives</div></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="s-label reveal" id="contact-label">04 — Contact</div>
+  <h2 class="contact-title reveal d1" id="contact-title">Open to<br><em>Opportunities.</em></h2>
+  <p class="contact-sub reveal d2" id="contact-sub">Quantitative risk · derivatives pricing · asset management · fixed income.<br>Available from October 2026 — 6-month internship.</p>
+  <a href="mailto:lucas.stalter44@gmail.com" class="contact-email reveal d3">lucas.stalter44@gmail.com</a>
+  <div class="contact-btns reveal d4">
+    <a href="https://www.linkedin.com/in/lucas-stalter/" target="_blank" class="c-btn primary">LinkedIn ↗</a>
+    <a href="https://github.com/LucasSt04" target="_blank" class="c-btn">GitHub ↗</a>
+    <a href="assets/cv/CV_STALTER_Lucas.pdf" target="_blank" class="c-btn" id="cv-btn">Download CV ↗</a>
+  </div>
+</section>
+
+<footer>
+  <span class="f-copy" id="footer-copy">// © 2026 Lucas Stalter — Quantitative Finance</span>
+  <div class="f-links">
+    <a href="https://github.com/LucasSt04" target="_blank">GitHub</a>
+    <a href="https://www.linkedin.com/in/lucas-stalter/" target="_blank">LinkedIn</a>
+    <a href="mailto:lucas.stalter44@gmail.com">Email</a>
+  </div>
+</footer>
+
+<script>
+/* ── CURSOR ── */
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx-3.5+'px';cur.style.top=my-3.5+'px'});
+(function animRing(){rx+=(mx-rx-17)*.1;ry+=(my-ry-17)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)})();
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.transform='scale(3)';cur.style.background='rgba(0,102,255,.5)';ring.style.transform='scale(1.6)';ring.style.borderColor='rgba(0,102,255,0.4)'});
+  el.addEventListener('mouseleave',()=>{cur.style.transform='scale(1)';cur.style.background='var(--accent)';ring.style.transform='scale(1)';ring.style.borderColor='rgba(0,102,255,0.35)'});
+});
+
+/* ── CANVAS: Brownian + Math Symbols + Parallax ── */
+const canvas=document.getElementById('bg-canvas');
+const ctx=canvas.getContext('2d');
+let W,H,scrollY=0;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+window.addEventListener('scroll',()=>{scrollY=window.scrollY});
+
+const syms=['∂','σ','∫','∆','Σ','λ','β','ρ','μ','α','π','ε','φ','∇'];
+const floats=Array.from({length:28},()=>({
+  x:Math.random()*window.innerWidth,
+  y:Math.random()*window.innerHeight*4,
+  vy:Math.random()*.22+.06,
+  sym:syms[Math.floor(Math.random()*syms.length)],
+  op:Math.random()*.09+.025,
+  sz:Math.floor(Math.random()*14+10),
+  parallaxSpeed:Math.random()*.4+.1
+}));
+
+const paths=Array.from({length:6},(_,i)=>({
+  pts:[{x:0,y:150+Math.random()*300}],
+  color:i%2===0?'26,74,138':'0,102,255',
+  op:Math.random()*.12+.05,
+  parallaxSpeed:Math.random()*.3+.05
+}));
+
+/* Smooth curve */
+function smooth(pts){
+  if(pts.length<2)return;
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length-1;i++){
+    const mx2=(pts[i].x+pts[i+1].x)/2,my2=(pts[i].y+pts[i+1].y)/2;
+    ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx2,my2);
+  }
+  ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);ctx.stroke();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#F4F7FC';ctx.fillRect(0,0,W,H);
+
+  /* DOT GRID with parallax */
+  const dotOff=(scrollY*.15)%50;
+  for(let x=0;x<W;x+=50){
+    for(let y=-50+dotOff;y<H+50;y+=50){
+      ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);
+      ctx.fillStyle='rgba(10,22,40,0.045)';ctx.fill();
+    }
+  }
+
+  /* SUBTLE HORIZONTAL LINES with parallax */
+  ctx.strokeStyle='rgba(26,74,138,0.025)';ctx.lineWidth=.5;
+  const lineOff=(scrollY*.1)%80;
+  for(let y=-80+lineOff;y<H+80;y+=80){
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+  }
+
+  /* BROWNIAN PATHS with parallax */
+  paths.forEach((p,pi)=>{
+    const last=p.pts[p.pts.length-1];
+    const next={x:last.x+1.4,y:last.y+(Math.random()-.5)*4.5};
+    next.y=Math.max(40,Math.min(H*3,next.y));
+    p.pts.push(next);
+    if(p.pts.length>180)p.pts.shift();
+    if(last.x>W+10){p.pts=[{x:0,y:100+Math.random()*H*.6}]}
+
+    const yOff=-scrollY*p.parallaxSpeed;
+    ctx.save();ctx.translate(0,yOff);
+    ctx.strokeStyle=`rgba(${p.color},${p.op})`;ctx.lineWidth=1;
+    smooth(p.pts);
+    /* End dot */
+    if(p.pts.length>1){
+      const e=p.pts[p.pts.length-1];
+      ctx.beginPath();ctx.arc(e.x,e.y,2.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${p.color},${p.op*2.5})`;ctx.fill();
+    }
+    ctx.restore();
+  });
+
+  /* FLOATING MATH SYMBOLS with parallax */
+  ctx.save();
+  floats.forEach(f=>{
+    f.y-=f.vy;
+    if(f.y<-30)f.y=H*3+30;
+    const screenY=f.y-scrollY*f.parallaxSpeed;
+    if(screenY<-40||screenY>H+40)return;
+    ctx.font=`300 ${f.sz}px Cormorant,Georgia,serif`;
+    ctx.fillStyle=`rgba(10,22,40,${f.op})`;
+    ctx.fillText(f.sym,f.x,screenY);
+  });
+  ctx.restore();
+
+  /* SOFT GLOW ORBS that move with scroll */
+  [
+    [.12,.25,320,'26,74,138',.08],
+    [.88,.6,240,'0,102,255',.12],
+    [.5,.9,380,'26,74,138',.06]
+  ].forEach(([ox,oy,r,c,ps])=>{
+    const gx=ox*W,gy=oy*H-scrollY*ps;
+    const g=ctx.createRadialGradient(gx,gy,0,gx,gy,r);
+    g.addColorStop(0,`rgba(${c},0.045)`);g.addColorStop(1,`rgba(${c},0)`);
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(gx,gy,r,0,Math.PI*2);ctx.fill();
+  });
+
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ── NAV SCROLL ── */
+const nb=document.getElementById('navbar');
+window.addEventListener('scroll',()=>nb.classList.toggle('solid',window.scrollY>60));
+
+/* ── REVEAL ── */
+const revObs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+
+/* ── SKILL BARS ── */
+const skObs=new IntersectionObserver(entries=>entries.forEach(e=>{
+  if(e.isIntersecting)e.target.querySelectorAll('.sk-fill').forEach((b,i)=>setTimeout(()=>b.style.width=b.dataset.w+'%',i*100+150));
+}),{threshold:.15});
+document.querySelectorAll('.skills-col').forEach(el=>skObs.observe(el));
+
+/* ── LANG SWITCH ── */
+let lang='en';
+const translations={
+  en:{
+    eyebrow:'Quantitative Finance · Risk · Asset Management · ESILV Paris',
+    sm:'Financial Engineering · ESILV Paris La Défense',
+    desc:`M1 Financial Engineering @ <strong>ESILV Paris La Défense</strong>.<br>Currently <strong>Developer & Financial Analyst @ Banque de France</strong> — bond valuation models & ETL pipelines.<br><br>Passionate about the <strong>mathematical side of finance</strong> — stochastic calculus, derivatives pricing, risk modeling, and quantitative asset management.<br><br>Seeking a <strong>6-month internship</strong> from October 2026.`,
+    ctaProj:'View Projects →',
+    m1:'Projects',m2:'Greeks & Derivatives',m3:'Current Internship',m4:'Stochastic Calculus',
+    scrollText:'Scroll',
+    aboutLabel:'01 — Profile',aboutTitle:'The Math<br>Behind <em>Finance.</em>',
+    focusLabel:'Target domains',
+    tlMaster:'Master in Financial Engineering',tlEng:'Advanced English — CEFR C1',
+    sk1:'Derivatives Pricing — BS, CRR, Greeks',sk3:'Stochastic Calculus & Probability',sk6:'Machine Learning — Signal Generation',
+    projLabel:'02 — Work',projTitle:'Selected <em>Projects.</em>',
+    liveText:'Live on GCP',
+    p1name:'Quantitative Portfolio Dashboard',p1desc:'Production-ready quant research platform. Backtesting engine (Moving Average, Momentum) vs Buy & Hold. Multi-asset optimizer with VaR, Sharpe Ratio, Max Drawdown. Deployed 24/7 on GCP with automated Cron daily reporting.',p1live:'Live Dashboard',
+    p2name:'C++ Option Pricer',p2desc:'High-performance C++ pricer: Black-Scholes + CRR Binomial Tree. 10,000+ options/sec. Full Greeks: Delta, Gamma, Vega, Theta, Rho.',
+    p3name:'QRT ENS Data Challenge',p3desc:'ML pipeline predicting stock return directions on 400,000+ observations. Full preprocessing, logistic regression, cross-validation.',
+    p4name:'VBA Option Pricer',p4desc:'Excel/VBA CRR Binomial Tree. European & American options, structured products, Greeks, Black-Scholes convergence analysis.',
+    p5name:'Commodity Trading & Risk',p5desc:'Dynamic strategies on WTI/Brent — momentum signals, hedging logic, VaR. Performance evaluated by historical backtest.',
+    p6name:'Lithium Market Analysis',p6desc:'Quantitative study of the lithium commodity market. Pricing models and trading strategy simulation using real market data.',
+    stackLabel:'03 — Expertise',stackTitle:'Tech & <em>Quant Stack.</em>',
+    st1:'Quant Finance',st2:'Risk Modeling',st6:'Math & Stats',st7:'Cloud & DevOps',
+    contactLabel:'04 — Contact',contactTitle:'Open to<br><em>Opportunities.</em>',
+    contactSub:'Quantitative risk · derivatives pricing · asset management · fixed income.<br>Available from October 2026 — 6-month internship.',
+    cvBtn:'Download CV ↗',footerCopy:'// © 2026 Lucas Stalter — Quantitative Finance',
+    flag:'🇬🇧',langText:'EN',navAbout:'About',navProjects:'Projects'
+  },
+  fr:{
+    eyebrow:'Finance Quantitative · Risque · Gestion d\'Actifs · ESILV Paris',
+    sm:'Ingénierie Financière · ESILV Paris La Défense',
+    desc:`Master 1 Ingénierie Financière @ <strong>ESILV Paris La Défense</strong>.<br>Actuellement <strong>Développeur & Analyste Financier @ Banque de France</strong> — modèles de valorisation d'obligations & pipelines ETL.<br><br>Passionné par le <strong>côté mathématique de la finance</strong> — calcul stochastique, pricing de dérivés, modélisation des risques et gestion d'actifs quantitative.<br><br>Recherche un <strong>stage de 6 mois</strong> à partir d'octobre 2026.`,
+    ctaProj:'Voir les Projets →',
+    m1:'Projets',m2:'Greeks & Dérivés',m3:'Stage en cours',m4:'Calcul Stochastique',
+    scrollText:'Défiler',
+    aboutLabel:'01 — Profil',aboutTitle:'Les Maths<br>au Cœur de la <em>Finance.</em>',
+    focusLabel:'Domaines cibles',
+    tlMaster:'Master en Ingénierie Financière',tlEng:'Anglais Avancé — CECR C1',
+    sk1:'Pricing de Dérivés — BS, CRR, Greeks',sk3:'Calcul Stochastique & Probabilités',sk6:'Machine Learning — Génération de Signaux',
+    projLabel:'02 — Travaux',projTitle:'Projets <em>Sélectionnés.</em>',
+    liveText:'En ligne sur GCP',
+    p1name:'Dashboard de Portefeuille Quantitatif',p1desc:'Plateforme de recherche quant prête pour la production. Moteur de backtesting (Moyenne Mobile, Momentum) vs Buy & Hold. Optimiseur multi-actifs avec VaR, Sharpe, Max Drawdown. Déployé 24/7 sur GCP avec rapport journalier automatisé.',p1live:'Dashboard Live',
+    p2name:'Pricer d\'Options C++',p2desc:'Pricer C++ haute performance : Black-Scholes + Arbre Binomial CRR. 10 000+ options/sec. Greeks complets : Delta, Gamma, Vega, Theta, Rho.',
+    p3name:'Challenge ENS QRT',p3desc:'Pipeline ML pour prédire la direction des rendements sur 400 000+ observations. Prétraitement complet, régression logistique, validation croisée.',
+    p4name:'Pricer d\'Options VBA',p4desc:'Arbre Binomial CRR Excel/VBA. Options européennes & américaines, produits structurés, Greeks, analyse de convergence Black-Scholes.',
+    p5name:'Trading Matières Premières & Risque',p5desc:'Stratégies dynamiques sur WTI/Brent — signaux momentum, couverture, VaR. Performance évaluée par backtest historique.',
+    p6name:'Analyse du Marché du Lithium',p6desc:'Étude quantitative du marché des matières premières du lithium. Modèles de pricing et simulation de stratégies de trading.',
+    stackLabel:'03 — Expertise',stackTitle:'Stack Tech & <em>Quant.</em>',
+    st1:'Finance Quantitative',st2:'Modélisation des Risques',st6:'Maths & Stats',st7:'Cloud & DevOps',
+    contactLabel:'04 — Contact',contactTitle:'Ouvert aux<br><em>Opportunités.</em>',
+    contactSub:'Risque quantitatif · pricing de dérivés · gestion d\'actifs · fixed income.<br>Disponible dès octobre 2026 — stage de 6 mois.',
+    cvBtn:'Télécharger le CV ↗',footerCopy:'// © 2026 Lucas Stalter — Finance Quantitative',
+    flag:'🇫🇷',langText:'FR',navAbout:'À propos',navProjects:'Projets'
+  }
+};
+
+function toggleLang(){
+  lang=lang==='en'?'fr':'en';
+  applyLang();
+}
+
+function applyLang(){
+  const t=translations[lang];
+  document.getElementById('langFlag').textContent=translations[lang==='en'?'fr':'en'].flag;
+  document.getElementById('langText').textContent=translations[lang==='en'?'fr':'en'].langText;
+  document.getElementById('hero-eyebrow').textContent=t.eyebrow;
+  document.getElementById('hero-sm').textContent=t.sm;
+  document.getElementById('hero-desc').innerHTML=t.desc;
+  document.getElementById('cta-projects').textContent=t.ctaProj;
+  document.getElementById('m1-label').textContent=t.m1;
+  document.getElementById('m2-label').textContent=t.m2;
+  document.getElementById('m3-label').textContent=t.m3;
+  document.getElementById('m4-label').textContent=t.m4;
+  document.getElementById('scroll-text').textContent=t.scrollText;
+  document.getElementById('about-label').textContent=t.aboutLabel;
+  document.getElementById('about-label').innerHTML=t.aboutLabel;
+  document.getElementById('about-title').innerHTML=t.aboutTitle;
+  document.getElementById('focus-label').textContent=t.focusLabel;
+  document.getElementById('tl-master').textContent=t.tlMaster;
+  document.getElementById('tl-eng').textContent=t.tlEng;
+  document.getElementById('proj-label').textContent=t.projLabel;
+  document.getElementById('proj-title').innerHTML=t.projTitle;
+  document.getElementById('live-text').textContent=t.liveText;
+  document.getElementById('p1-name').textContent=t.p1name;
+  document.getElementById('p1-desc').textContent=t.p1desc;
+  document.getElementById('p1-live').textContent=t.p1live;
+  document.getElementById('p2-name').textContent=t.p2name;
+  document.getElementById('p2-desc').textContent=t.p2desc;
+  document.getElementById('p3-name').textContent=t.p3name;
+  document.getElementById('p3-desc').textContent=t.p3desc;
+  document.getElementById('p4-name').textContent=t.p4name;
+  document.getElementById('p4-desc').textContent=t.p4desc;
+  document.getElementById('p5-name').textContent=t.p5name;
+  document.getElementById('p5-desc').textContent=t.p5desc;
+  document.getElementById('p6-name').textContent=t.p6name;
+  document.getElementById('p6-desc').textContent=t.p6desc;
+  document.getElementById('stack-label').textContent=t.stackLabel;
+  document.getElementById('stack-title').innerHTML=t.stackTitle;
+  document.getElementById('st1-name').textContent=t.st1;
+  document.getElementById('st2-name').textContent=t.st2;
+  document.getElementById('st6-name').textContent=t.st6;
+  document.getElementById('st7-name').textContent=t.st7;
+  document.getElementById('contact-label').textContent=t.contactLabel;
+  document.getElementById('contact-title').innerHTML=t.contactTitle;
+  document.getElementById('contact-sub').innerHTML=t.contactSub;
+  document.getElementById('cv-btn').textContent=t.cvBtn;
+  document.getElementById('footer-copy').textContent=t.footerCopy;
+  document.querySelectorAll('[data-lang="en"]').forEach(el=>el.style.display=lang==='en'?'':'none');
+  document.querySelectorAll('[data-lang="fr"]').forEach(el=>el.style.display=lang==='fr'?'':'none');
+  document.documentElement.lang=lang;
+}
+
+/* Init: show correct lang spans */
+applyLang();
+/* Reset to EN on load */
+lang='en';applyLang();
+</script>
+</body>
+</html>
